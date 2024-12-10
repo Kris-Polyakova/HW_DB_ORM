@@ -58,7 +58,6 @@ def get_dsn():
     return DSN
 
 def add_data_from_file(session, filename=str):
-    
     with open (filename, 'r', encoding = 'utf-8') as f:
         data = json.load(f)
         for record in data:
@@ -70,17 +69,26 @@ def add_data_from_file(session, filename=str):
                 'sale': Sale,
             }[record.get('model')]
             session.add(model(id=record.get('pk'), **record.get('fields')))
-            
-def get_buying_books(session,id_publisher=None, name_publisher=None):
-    query = (session.query(Book.title, Shop.name, Sale.price, Sale.date_sale)
-             .join(Stock, Shop.id == Stock.id_shop)
-             .join(Sale, Stock.id == Sale.id_stock)
+   
+def get_shops(session, input_data):
+    query = ((session.query(Book.title, Shop.name, Sale.price, Sale.date_sale)
+             ).select_from(Shop).join(Stock, Shop.id == Stock.id_shop)
              .join(Book, Stock.id_book == Book.id)
              .join(Publisher, Book.id_publisher == Publisher.id)
-             .filter(or_(Publisher.id==id_publisher, Publisher.name==name_publisher))
-             )
-    for q in query:
-        date = str(q.date_sale).split(' ')
-        print(f'{q.title}|{q.name}|{q.price}|{date[0]}')
+             .join(Sale, Stock.id == Sale.id_stock))
+    if input_data.isdigit():
+       q = query.filter(Publisher.id == input_data).all()
+    else:
+       q = query.filter(Publisher.name == input_data).all()
+    for title, name, prise, date in q: 
+        print(f"{title: <40} | {name: <10} | {prise: <8} | {date.strftime('%d-%m-%Y')}")
 
+   
+
+
+    
+             
+             
+             
+             
 
